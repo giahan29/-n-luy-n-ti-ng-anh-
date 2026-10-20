@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ôn Luyện Tiếng Anh Đơn Giản</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f7f6;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            background-color: #ffffff;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            width: 400px;
+            max-width: 90%;
+        }
+
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            font-size: 22px;
+            margin-bottom: 15px;
+        }
+
+        #progress-text {
+            font-size: 14px;
+            color: #7f8c8d;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        h3 {
+            color: #34495e;
+            font-size: 18px;
+            margin-bottom: 15px;
+            line-height: 1.4;
+        }
+
+        #options-container {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .option-btn {
+            background-color: #ecf0f1;
+            border: 2px solid #bdc3c7;
+            padding: 12px 15px;
+            border-radius: 8px;
+            text-align: left;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.2s ease;
+            outline: none;
+        }
+
+        .option-btn:hover:not([disabled]) {
+            background-color: #d5dbdb;
+        }
+
+        /* Trạng thái đáp án đúng / sai */
+        .option-btn.correct {
+            background-color: #2ecc71 !important;
+            color: white !important;
+            border-color: #27ae60 !important;
+        }
+
+        .option-btn.incorrect {
+            background-color: #e74c3c !important;
+            color: white !important;
+            border-color: #c0392b !important;
+        }
+
+        .btn {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            width: 100%;
+            transition: background 0.2s ease;
+        }
+
+        .btn:hover {
+            background-color: #2980b9;
+        }
+
+        .hide {
+            display: none;
+        }
+
+        #result-box {
+            text-align: center;
+        }
+
+        #result-box p {
+            font-size: 18px;
+            margin: 20px 0;
+            color: #e67e22;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Ôn Tập Tiếng Anh Cấp Tốc</h1>
+        
+        <!-- Khu vực hiển thị câu hỏi -->
+        <div id="quiz-box">
+            <div id="progress-text">Câu 1 / 3</div>
+            <div id="question-container">
+                <h3 id="question-text">Đang tải câu hỏi...</h3>
+                <div id="options-container">
+                    <!-- Các lựa chọn đáp án sẽ hiện ở đây bằng JavaScript -->
+                </div>
+            </div>
+            
+            <button id="next-btn" class="btn">Câu tiếp theo</button>
+        </div>
+
+        <!-- Khu vực hiển thị kết quả -->
+        <div id="result-box" class="hide">
+            <h2>Kết quả của bạn</h2>
+            <p id="score-text">Bạn đã trả lời đúng X/Y câu.</p>
+            <button id="restart-btn" class="btn">Làm lại từ đầu</button>
+        </div>
+    </div>
+
+    <script>
+        // Danh sách câu hỏi ôn luyện (Bạn có thể tự thêm hoặc sửa câu hỏi ở đây)
+        const questions = [
+            {
+                question: "1. Choose the correct answer: She ___ to school every day.",
+                options: ["go", "goes", "going", "gone"],
+                answer: 1 // Đáp án đúng là "goes" (vị trí số 1)
+            },
+            {
+                question: "2. What is the synonym of 'Brave'?",
+                options: ["Coward", "Courageous", "Afraid", "Weak"],
+                answer: 1 // "Courageous" (vị trí số 1)
+            },
+            {
+                question: "3. Choose the correct preposition: I am good ___ English.",
+                options: ["in", "on", "at", "with"],
+                answer: 2 // "at" (vị trí số 2)
+            }
+        ];
+
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let answered = false;
+
+        const questionText = document.getElementById("question-text");
+        const optionsContainer = document.getElementById("options-container");
+        const nextBtn = document.getElementById("next-btn");
+        const quizBox = document.getElementById("quiz-box");
+        const resultBox = document.getElementById("result-box");
+        const scoreText = document.getElementById("score-text");
+        const restartBtn = document.getElementById("restart-btn");
+        const progressText = document.getElementById("progress-text");
+
+        // Hiển thị câu hỏi
+        function showQuestion() {
+            resetState();
+            let currentQuestion = questions[currentQuestionIndex];
+            
+            questionText.innerText = currentQuestion.question;
+            progressText.innerText = `Câu ${currentQuestionIndex + 1} / ${questions.length}`;
+
+            currentQuestion.options.forEach((option, index) => {
+                const button = document.createElement("button");
+                button.innerText = option;
+                button.classList.add("option-btn");
+                button.addEventListener("click", () => selectOption(index, button));
+                optionsContainer.appendChild(button);
+            });
+        }
+
+        function resetState() {
+            answered = false;
+            nextBtn.style.display = "none";
+            while (optionsContainer.firstChild) {
+                optionsContainer.removeChild(optionsContainer.firstChild);
+            }
+        }
+
+        // Xử lý khi bấm chọn đáp án
+        function selectOption(selectedIndex, selectedButton) {
+            if (answered) return;
+            answered = true;
+
+            const correctIndex = questions[currentQuestionIndex].answer;
+            const allButtons = optionsContainer.querySelectorAll(".option-btn");
+
+            if (selectedIndex === correctIndex) {
+                selectedButton.classList.add("correct");
+                score++;
+            } else {
+                selectedButton.classList.add("incorrect");
+                allButtons[correctIndex].classList.add("correct");
+            }
+
+            allButtons.forEach(btn => btn.disabled = true);
+            nextBtn.style.display = "block";
+        }
+
+        // Chuyển sang câu tiếp theo
+        nextBtn.addEventListener("click", () => {
+            currentQuestionIndex++;
+            if (currentQuestionIndex < questions.length) {
+                showQuestion();
+            } else {
+                showResult();
+            }
+        });
+
+        // Hiển thị màn hình kết quả
+        function showResult() {
+            quizBox.classList.add("hide");
+            resultBox.classList.remove("hide");
+            scoreText.innerText = `Bạn đã trả lời đúng ${score} / ${questions.length} câu.`;
+        }
+
+        // Làm lại bài
+        restartBtn.addEventListener("click", () => {
+            currentQuestionIndex = 0;
+            score = 0;
+            resultBox.classList.add("hide");
+            quizBox.classList.remove("hide");
+            showQuestion();
+        });
+
+        // Chạy lần đầu tiên
+        showQuestion();
+    </script>
+</body>
+</html>
